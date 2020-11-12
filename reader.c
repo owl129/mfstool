@@ -179,29 +179,43 @@ int isDirectoryEmpty(char *dirname) {
  * @param outdir - output dir
  * @return int 
  */
-void dfs_file_extract_v1(struct minix_fs_dat *fs, int inode, 
+void dfs_file_extract(struct minix_fs_dat *fs, int inode, 
     char * inpath, char * outdir){
   char** params;
   char* outpath;
   int i,bsz,j;
   u8 blk[BLOCK_SIZE];
-  int fdirsize = VERSION_2(fs) ? 
-		(INODE2(fs,inode))->i_size : (INODE(fs,inode))->i_size;
-  struct minix_inode *ino = INODE(fs,inode);
+    
+  u16 ino_mode;
+  u32 ino_atime, ino_mtime, ino_size;
+  if (VERSION_2(fs)) {
+    struct minix2_inode *ino = INODE2(fs,inode);
+    ino_mode = ino->i_mode;
+    ino_atime = ino->i_atime;
+    ino_mtime = ino->i_mtime;
+    ino_size = ino->i_size;
+  }else{
+    struct minix_inode *ino = INODE(fs,inode);
+    ino_mode = ino->i_mode;
+    ino_atime = ino_mtime = ino->i_time;
+    ino_size = ino->i_size;
+  }
+
   int dentsz = DIRSIZE(fs);
 
   char* cur_out_path = str_combine(outdir, inpath);
-  if (S_ISDIR(ino->i_mode)) {
+  if (S_ISDIR(ino_mode)) {
     // is dir
     // 0 create out dir    
-    mkdir(cur_out_path, ino->i_mode & 07777); // chmod only allow 12 bit property.
+    mkdir(cur_out_path, ino_mode & 07777); // chmod only allow 12 bit property.
     struct utimbuf tb;
-    tb.modtime = tb.actime = ino->i_time;
+    tb.actime = ino_atime;
+    tb.modtime = ino_mtime;
     utime(cur_out_path,&tb);
     printf("gen dir :\t%s\n", cur_out_path);
 
     // 1.0 iterate each directory block
-    for (i = 0; i < fdirsize; i += BLOCK_SIZE) {
+    for (i = 0; i < ino_size; i += BLOCK_SIZE) {
       bsz = read_inoblk(fs,inode,i / BLOCK_SIZE,blk);
       // 1.1 iterate each item of directory block
       for (j = 0; j < bsz ; j+= dentsz) {
@@ -213,11 +227,11 @@ void dfs_file_extract_v1(struct minix_fs_dat *fs, int inode,
         char* path_nxt = str_combine(str_combine(inpath, "/"), (char*)(blk+j+2));
     
         // 2. call extract
-        dfs_file_extract_v1(fs, ino_nxt, path_nxt, outdir);
+        dfs_file_extract(fs, ino_nxt, path_nxt, outdir);
         
       }
     }
-  }else if (S_ISREG(ino->i_mode)){
+  }else if (S_ISREG(ino_mode)){
     // regular file
     params = (char**) domalloc(sizeof(char*)*3, 0);
     params[0] = "copy";
@@ -225,7 +239,7 @@ void dfs_file_extract_v1(struct minix_fs_dat *fs, int inode,
     params[2] = cur_out_path;
     cmd_copy(fs, 3, params);
     printf("gen file:\t%s\n", cur_out_path);
-  }else if (S_ISLNK(ino->i_mode)){
+  }else if (S_ISLNK(ino_mode)){
     // symbol link file
 
     // 0.0 open temp file as buffer
@@ -233,9 +247,9 @@ void dfs_file_extract_v1(struct minix_fs_dat *fs, int inode,
     if (!fp) die("open tmp file failed :/tmp/sym_cnt_tmp");
     // 0.1 read symfile content to buffer
     readfile(fs, fp, inpath, S_IFLNK, 0);
-    char * target = (char*) domalloc(ino->i_size+1, 0);
+    char * target = (char*) domalloc(ino_size+1, 0);
     fseek(fp, 0, SEEK_SET);
-    dofread(fp, target, ino->i_size);
+    dofread(fp, target, ino_size);
     fclose(fp);
     
     // 1. create symlink file
@@ -264,5 +278,5 @@ void cmd_extract(struct minix_fs_dat *fs,int argc,char **argv) {
   if ( isDirectoryEmpty(dest_dir)!=1 )
     fatalmsg("output directory is not empty or not exist!\n");
 
-  dfs_file_extract_v1(fs, MINIX_ROOT_INO, ".", dest_dir);
+  dfs_file_extract(fs, MINIX_ROOT_INO, ".", dest_dir);
 } 
