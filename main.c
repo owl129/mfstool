@@ -186,6 +186,8 @@ void do_cmd(struct minix_fs_dat *fs,int argc,char **argv) {
     cmd_cat(fs,argc,argv);
   } else if (!strcmp(argv[0],"extract")) {
     cmd_extract(fs,argc,argv);
+  } else if (!strcmp(argv[0],"copy")) {
+    cmd_copy(fs,argc,argv);
   } else if (!strcmp(argv[0],"readlink")) {
     cmd_readlink(fs,argc,argv);
   } else if (!strcmp(argv[0],"symlink")) {

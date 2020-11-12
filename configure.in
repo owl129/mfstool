@@ -1,7 +1,7 @@
 dnl
 dnl Minix File-system tool
 dnl
-AC_INIT(mfstool,0.5,alejandro_liu@hotmail.com)
+AC_INIT(mfstool,0.6,alejandro_liu@hotmail.com)
 AC_CONFIG_SRCDIR(main.c)
 AM_INIT_AUTOMAKE
 AM_CONFIG_HEADER(config.h)

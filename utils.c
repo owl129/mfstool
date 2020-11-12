@@ -135,3 +135,17 @@ int dogetgid(void) {
   if (opt_squash) return 0;
   return getgid();    
 }
+
+/**
+ * @brief combine two string
+ * 
+ * @param sub1 
+ * @param sub2 
+ * @return char* sub1+sub2
+ */
+char* str_combine(char* sub1, char* sub2){
+  char * res = (char*)domalloc(strlen(sub1)+strlen(sub2)+1, 0);
+  strcpy(res, sub1);
+  strcpy(res+strlen(sub1), sub2);
+  return res;
+}
