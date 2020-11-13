@@ -18,7 +18,7 @@ int dogetuid();
 int dogetgid();
 char* str_combine(char* sub1, char* sub2);
 u32 ino2_zone(struct minix_fs_dat *fs, struct minix2_inode *ino, u32 blk);
-int ino_zone(struct minix_fs_dat *fs, struct minix_inode *ino, int blk);
+u16 ino_zone(struct minix_fs_dat *fs, struct minix_inode *ino, int blk);
 void ino2_setzone(struct minix_fs_dat *fs, struct minix2_inode *ino, u32 blk, u32 zone);
 void ino_setzone(struct minix_fs_dat *fs, struct minix_inode *ino, int blk, int zone);
 void ino2_freezone(struct minix_fs_dat *fs, struct minix2_inode *ino, u32 blk);

@@ -66,7 +66,7 @@ u32 ino2_zone(struct minix_fs_dat *fs,struct minix2_inode *ino,u32 blk) {
  * @param ino - i-node structure (v1)
  * @param blk - file block
  */
-int ino_zone(struct minix_fs_dat *fs,struct minix_inode *ino,int blk) {
+u16 ino_zone(struct minix_fs_dat *fs,struct minix_inode *ino,int blk) {
   /* Direct block */
   if (blk < 7) return ino->i_zone[blk];
 
@@ -81,7 +81,7 @@ int ino_zone(struct minix_fs_dat *fs,struct minix_inode *ino,int blk) {
   /* Double indirect block. */
   blk -= MINIX_ZONESZ;
   if (blk < MINIX_ZONESZ * MINIX_ZONESZ) {
-    int iblks[MINIX_ZONESZ];
+    u16 iblks[MINIX_ZONESZ];
     if (ino->i_dbl_indr_zone == 0) return 0;
     dofread(goto_blk(fs->fp,ino->i_dbl_indr_zone),iblks,sizeof iblks);
     if (iblks[blk / MINIX_ZONESZ] == 0) return 0;
